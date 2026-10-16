@@ -13,7 +13,7 @@ Editor de diseño gráfico que funciona **entero en el navegador**, pensado para
 
 ## Índice
 
-1. [Publicar en GitHub Pages](#publicar-en-github-pages)
+1. [Usar Lienzo](#usar-lienzo)
 2. [Vista general](#vista-general)
 3. [Pestaña Diseñar](#pestaña-diseñar)
 4. [Pestaña Lote](#pestaña-lote)
@@ -32,21 +32,25 @@ Editor de diseño gráfico que funciona **entero en el navegador**, pensado para
 
 ---
 
-## Publicar en GitHub Pages
+## Usar Lienzo
 
-1. Crea un repositorio nuevo en GitHub (por ejemplo `lienzo`).
-2. Sube a la **raíz** del repositorio los archivos de esta carpeta: `index.html`, `README.md`, `LICENSE`, `logo.png`, `og-image.png`, `.nojekyll` y la carpeta `fonts/` completa.
-3. En el repositorio ve a **Settings → Pages**.
-4. En *Build and deployment* elige **Source: Deploy from a branch**, rama **`main`** y carpeta **`/ (root)`**. Guarda.
-5. Espera uno o dos minutos. La app quedará en `https://TU-USUARIO.github.io/lienzo/`.
+**Sin instalar nada:** abre **https://grekno.github.io/lienzo/** en un navegador de escritorio (Chrome, Edge, Firefox o Safari recientes). Todo funciona en tu navegador; tus diseños y tablas no se envían a ningún servidor.
+
+### Alojar tu propia copia
+
+Como es un sitio estático, puedes publicar tu propia copia en GitHub Pages en pocos minutos:
+
+1. Haz un *fork* de este repositorio (o descarga los archivos y súbelos a uno nuevo).
+2. En tu repositorio ve a **Settings → Pages**.
+3. En *Build and deployment* elige **Deploy from a branch**, rama **`main`** y carpeta **`/ (root)`**. Guarda.
+4. En uno o dos minutos la app estará en `https://TU-USUARIO.github.io/NOMBRE-DEL-REPO/`.
+5. Opcional: para que la vista previa del enlace funcione en tu copia, mira [Vista previa del enlace](#vista-previa-del-enlace-y-redes-sociales).
 
 Notas:
 
-- `.nojekyll` evita que GitHub procese el sitio con Jekyll; no hace falta tocarlo.
-- Hace falta **HTTPS** (GitHub Pages ya lo da) para que todo funcione con normalidad.
-- Las tipografías van **incluidas en el repositorio** (`fonts/`), así que no se pide nada a servidores externos y funciona sin conexión una vez cargada la página.
-- **Antes de compartir el enlace**, sustituye `TU-USUARIO` por tu usuario de GitHub en `index.html` (ver [Vista previa del enlace](#vista-previa-del-enlace-y-redes-sociales)).
-- También funciona abriendo `index.html` directamente con doble clic, aunque algunos navegadores limitan el almacenamiento local en archivos `file://`.
+- Las tipografías van **incluidas en el repositorio** (`fonts/`): no se pide nada a servidores externos.
+- También funciona abriendo `index.html` con doble clic, aunque algunos navegadores limitan el almacenamiento local en archivos `file://`.
+- En una copia propia, la pestaña Comunidad no tendrá base de datos (ver [Plantillas propias y Comunidad](#plantillas-propias-y-comunidad)).
 
 ---
 
@@ -326,19 +330,15 @@ Lienzo **no hace ninguna petición externa**: ni tipografías de terceros, ni an
 
 ## Vista previa del enlace y redes sociales
 
-`index.html` incluye etiquetas *Open Graph* y *Twitter Card*, de modo que al pegar el enlace en WhatsApp, Telegram, X, LinkedIn, Facebook o Discord aparece una tarjeta con el título, la descripción y `og-image.png`.
+`index.html` incluye etiquetas *Open Graph* y *Twitter Card*: al pegar el enlace en WhatsApp, Telegram, X, LinkedIn, Facebook o Discord aparece una tarjeta con título, descripción y `og-image.png`.
 
-Para que funcione hay que poner tu dirección real. En `index.html` busca `TU-USUARIO` y sustitúyelo por tu usuario de GitHub (si el repositorio no se llama `lienzo`, cambia también esa parte). Aparece en cuatro sitios: `canonical`, `og:url`, `og:image` y `twitter:image`. En Linux/Mac:
+**Si publicas tu propia copia**, las direcciones apuntan a la web original. En `index.html` busca `https://grekno.github.io/lienzo/` y cámbialo por la dirección de tu copia (aparece en `canonical`, `og:url`, `og:image` y `twitter:image`). En Linux/Mac:
 
 ```
-sed -i 's/TU-USUARIO/tuusuario/g' index.html
+sed -i 's#https://grekno.github.io/lienzo/#https://tuusuario.github.io/tu-repo/#g' index.html
 ```
 
-Notas:
-
-- Las redes **guardan en caché** la vista previa de cada enlace. Si cambias la imagen o el texto, usa el depurador de la plataforma (p. ej. Facebook Sharing Debugger) para refrescarla.
-- Instagram no muestra tarjetas de enlace; ahí pon la dirección en la biografía. El enlace sí mostrará la tarjeta cuando se comparta por mensaje directo, WhatsApp, X, etc.
-- Puedes cambiar `og-image.png` por tu propia imagen manteniendo el tamaño 1200×630.
+Las redes **guardan en caché** la vista previa de cada enlace; si cambias la imagen o el texto, usa el depurador de la plataforma para refrescarla. Puedes sustituir `og-image.png` por tu propia imagen manteniendo el tamaño 1200×630.
 
 ---
 
