@@ -84,7 +84,7 @@ Incluye 10 plantillas listas para usar, agrupadas por red:
 | Red | Plantillas |
 |---|---|
 | X (antes Twitter) | Anuncio, Cita, Cifra, Cabecera, Foto de perfil |
-| Instagram | Publicación, Historia |
+| Instagram | Publicación, Historia, Cuaderno (hoja de libreta con letra a bolígrafo, 1080×1350) |
 | YouTube | Miniatura |
 | LinkedIn | Banner |
 
