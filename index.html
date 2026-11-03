@@ -287,16 +287,10 @@ th input{font-weight:700}
       <div class="tabs" role="tablist">
         <button class="on" data-ltab="templates" role="tab" aria-selected="true">Plantillas</button>
         <button data-ltab="elements" role="tab" aria-selected="false">Elementos</button>
-        <button data-ltab="community" role="tab" aria-selected="false">Comunidad</button>
       </div>
       <section id="ltTemplates">
         <div class="chips" id="tplFilters"></div>
         <div id="tplList"></div>
-      </section>
-      <section id="ltCommunity" hidden>
-        <p class="hint" style="margin-bottom:10px">Plantillas compartidas por las personas con acceso a esta app.</p>
-        <div class="chips" id="commFilters"></div>
-        <div id="commList"></div>
       </section>
       <section id="ltElements" hidden>
         <h3 class="gh" style="margin-top:4px">Texto</h3>
@@ -394,7 +388,6 @@ th input{font-weight:700}
     <h2 id="mdlTitle">Guardar como plantilla</h2>
     <label class="fld"><span>Nombre</span><input id="tplName" type="text" maxlength="60" autocomplete="off"></label>
     <label class="fld"><span>Categoría</span><select id="tplCat"></select></label>
-    <label class="chk"><input type="checkbox" id="tplShare"><span>Compartir en la Comunidad</span></label>
     <p class="hint" id="tplHint">Las imágenes no se incluyen en las plantillas.</p>
     <div class="row"><button class="btn primary" type="submit">Guardar</button><button class="btn" type="button" id="mdlCancel">Cancelar</button></div>
   </form>
@@ -978,7 +971,7 @@ function importImage(file){
 }
 
 /* ---------- plantillas ---------- */
-let tplFilter='Todas', commFilter='Todas';
+let tplFilter='Todas';
 const CATS=['X','Instagram','YouTube','LinkedIn','Otros'];
 const TPL_KEY='lienzo-tpls-v1';
 const tplEls=t=>t.els().map(e=>(e.type==='text'&&!t.user)?{...e,text:tr(e.text)}:e);
@@ -989,7 +982,7 @@ function drawTplThumb(c,t){
   const x=c.getContext('2d'); x.setTransform(c.width/t.w,0,0,c.height/t.h,0,0);
   renderScene(x,{page:{w:t.w,h:t.h,bg:t.bg},els:tplEls(t)},null);
 }
-/* Las plantillas de la Comunidad son datos ajenos: se validan campo a campo antes de usarlas */
+/* Las plantillas guardadas se validan campo a campo antes de usarlas */
 const numIn=(v,d,a,b)=>Number.isFinite(v)?clamp(v,a,b):d;
 const COLOR_KEYS=new Set(['color','fill','stroke']), ENUMS={align:['left','center','right'],valign:['top','middle','bottom']};
 function cleanBg(b){
@@ -1037,16 +1030,13 @@ function snapshotTpl(name,cat){
   commitPending();
   return {name,cat,w:S.page.w,h:S.page.h,bg:JSON.parse(JSON.stringify(S.page.bg)),els:JSON.parse(JSON.stringify(S.els.filter(e=>e.type!=='image')))};
 }
-async function saveTemplate(name,cat,share){
+function saveTemplate(name,cat){
   const t=mkUserTpl(snapshotTpl(name,cat),{id:newId('t'),mine:true,shared:''});
   if(!t){ toast('No se pudo guardar el archivo.'); return; }
   myTpls.unshift(t);
   try{ persistMine(); }catch(e){ myTpls.shift(); toast('No hay espacio en el navegador para guardar la plantilla.'); return; }
   tplFilter='Mías'; renderTemplates();
-  if(!share){ toast('Plantilla guardada en «Mis plantillas»'); return; }
-  const id=await publishTpl(t);
-  if(id){ t.shared=id; try{ persistMine(); }catch(e){} toast('Plantilla guardada y compartida en la Comunidad'); }
-  else toast('Plantilla guardada, pero no se pudo compartir en la Comunidad.');
+  toast('Plantilla guardada en «Mis plantillas»');
 }
 function deleteMine(t){
   const i=myTpls.indexOf(t); if(i<0) return;
@@ -1054,44 +1044,6 @@ function deleteMine(t){
   try{ persistMine(); }catch(e){}
   renderTemplates();
   toast('Plantilla eliminada','Deshacer',()=>{ myTpls.splice(Math.min(i,myTpls.length),0,t); try{ persistMine(); }catch(e){} renderTemplates(); });
-}
-function copyToMine(t){
-  const c=mkUserTpl(plain(t),{id:newId('t'),mine:true,shared:''}); if(!c) return;
-  myTpls.unshift(c);
-  try{ persistMine(); }catch(e){ myTpls.shift(); toast('No hay espacio en el navegador para guardar la plantilla.'); return; }
-  renderTemplates(); toast('Copia guardada en «Mis plantillas»');
-}
-/* --- Comunidad (colección compartida «templates») --- */
-let CDB=null, ME=null, canWrite=null, commDocs=[], commState='idle', commP=null;
-function ensureComm(){
-  if(commP) return commP;
-  commP=(async()=>{
-    commState='loading'; renderCommunity();
-    try{
-      const cl=window.claude; if(!cl||!cl.use) throw new Error('off');
-      const db=await cl.use('db'); if(!db) throw new Error('off');
-      CDB=db;
-      try{ const user=await cl.use('user'); if(user){ try{ ME=await user.id(); }catch(e){} try{ canWrite=await user.can('data.write'); }catch(e){} } }catch(e){}
-      db.collection('templates').orderBy('created','desc').limit(100).onSnapshot(snap=>{
-        commDocs=snap.docs.map(d=>{ const dd=d.data()||{}; return mkUserTpl(dd,{id:d.id,community:true,author:typeof dd.author==='string'?dd.author:''}); }).filter(Boolean);
-        commState='ready'; renderCommunity();
-      },()=>{ commState='error'; renderCommunity(); });
-      return db;
-    }catch(e){ commState=CDB?'error':'off'; renderCommunity(); return null; }
-  })();
-  return commP;
-}
-async function publishTpl(t){
-  try{
-    const db=await ensureComm(); if(!db||canWrite===false) return '';
-    const id=newId('c');
-    await db.collection('templates').doc(id).set({...plain(t),author:ME||'',created:Date.now()});
-    return id;
-  }catch(e){ return ''; }
-}
-async function unshare(t){
-  try{ await CDB.collection('templates').doc(t.id).delete(); toast('Plantilla quitada de la Comunidad'); }
-  catch(e){ toast('No se pudo quitar de la Comunidad.'); }
 }
 /* --- listas --- */
 function tplCard(t,extra){
@@ -1118,42 +1070,21 @@ function renderTemplates(){
     list.append(h('div',{class:'tplgrid'},...TPLS.filter(t=>t.group===g).map(t=>tplCard(t))));
   });
 }
-function renderCommunity(){
-  const f=$('#commFilters'), list=$('#commList'); if(!f||!list) return;
-  const cats=CATS.filter(c=>commDocs.some(t=>t.cat===c));
-  if(commFilter!=='Todas'&&!cats.includes(commFilter)) commFilter='Todas';
-  chipRow(f,['Todas',...cats],commFilter,g=>{ commFilter=g; renderCommunity(); });
-  list.replaceChildren();
-  const msg=t=>list.append(h('p',{class:'hint',text:t}));
-  if(commState==='off') return msg('La Comunidad no está disponible en esta vista. Tus plantillas se guardan igualmente en este navegador.');
-  if(commState==='error') return msg('No se pudieron cargar las plantillas de la Comunidad.');
-  if(commState==='idle'||commState==='loading') return msg('Cargando…');
-  if(!commDocs.length) return msg('Aún no hay plantillas compartidas. Guarda una plantilla y marca «Compartir en la Comunidad».');
-  const shown=commDocs.filter(t=>commFilter==='Todas'||t.cat===commFilter);
-  if(!shown.length) return msg('No hay plantillas en esta categoría.');
-  list.append(h('div',{class:'tplgrid'},...shown.map(t=>tplCard(t,h('div',{class:'tplact'},
-    h('button',{class:'btn',type:'button',text:'Guardar copia',onclick:()=>copyToMine(t)}),
-    (ME&&t.author===ME)?h('button',{class:'btn danger',type:'button',text:'Quitar de la Comunidad',onclick:()=>unshare(t)}):null)))));
-}
 /* --- diálogo «Guardar plantilla» --- */
 function fillTplCats(){
   const s=$('#tplCat'), cur=s.value||'Otros';
   s.replaceChildren(...CATS.map(c=>h('option',{value:c,text:c==='X'?'X (antes Twitter)':c}))); s.value=cur;
 }
 let mdlFrom=null;
-async function openMdl(){
+function openMdl(){
   mdlFrom=document.activeElement;
   $('#tplName').value=S.page.name||''; $('#tplCat').value='Otros';
-  const sh=$('#tplShare'); sh.checked=false; sh.disabled=false; $('#tplHint').textContent=tr('Las imágenes no se incluyen en las plantillas.');
   $('#mdl').hidden=false; $('#tplName').focus(); $('#tplName').select();
-  const db=await ensureComm();
-  if(!db){ sh.disabled=true; $('#tplHint').textContent=tr('La Comunidad no está disponible en esta vista. Tus plantillas se guardan igualmente en este navegador.'); }
-  else if(canWrite===false){ sh.disabled=true; $('#tplHint').textContent=tr('Tu acceso a esta app no permite compartir en la Comunidad.'); }
 }
 function closeMdl(){ $('#mdl').hidden=true; if(mdlFrom&&mdlFrom.focus) mdlFrom.focus(); }
 function submitMdl(){
-  const name=$('#tplName').value.replace(/\s+/g,' ').trim()||tr('Sin nombre'), cat=$('#tplCat').value, share=$('#tplShare').checked&&!$('#tplShare').disabled;
-  closeMdl(); saveTemplate(name,cat,share);
+  const name=$('#tplName').value.replace(/\s+/g,' ').trim()||tr('Sin nombre'), cat=$('#tplCat').value;
+  closeMdl(); saveTemplate(name,cat);
 }
 function ensureFields(els){
   els.filter(e=>e.type==='text'&&e.field).forEach(e=>{
@@ -1796,8 +1727,7 @@ function wire(){
   $('#fitSel').addEventListener('change',e=>setFit(e.target.value)); $('#fitTop').addEventListener('change',e=>setFit(e.target.value));
   $$('[data-ltab]').forEach(b=>b.addEventListener('click',()=>{
     $$('[data-ltab]').forEach(x=>{ x.classList.toggle('on',x===b); x.setAttribute('aria-selected',String(x===b)); });
-    $('#ltTemplates').hidden=b.dataset.ltab!=='templates'; $('#ltElements').hidden=b.dataset.ltab!=='elements'; $('#ltCommunity').hidden=b.dataset.ltab!=='community';
-    if(b.dataset.ltab==='community') ensureComm();
+    $('#ltTemplates').hidden=b.dataset.ltab!=='templates'; $('#ltElements').hidden=b.dataset.ltab!=='elements';
   }));
   $$('[data-add]').forEach(b=>b.addEventListener('click',()=>addKind(b.dataset.add)));
   $('#addImage').onclick=()=>$('#fileImg').click();
@@ -1860,7 +1790,7 @@ function renderPrefs(){
 function setLang(l){
   if(l!=='es'&&l!=='en') return; LANG=l; savePrefs(); ROOT.lang=l;
   applyStatic(); renderPrefs(); updateFmtUI(); fillTplCats();
-  renderTemplates(); renderCommunity(); renderScaleSel(); refreshPreviewSelect(); renderProps(); renderParts(); updateZipInfo();
+  renderTemplates(); renderScaleSel(); refreshPreviewSelect(); renderProps(); renderParts(); updateZipInfo();
   qKey=''; closeQ(); closeFmt(); redraw(); if(mode==='batch') renderBatch();
 }
 function setTheme(t){ if(!THEMES.some(x=>x[0]===t)) return; THEME=t; savePrefs(); applyTheme(); }
@@ -1869,7 +1799,7 @@ if(!load()) starter();
 S.sel=null;
 collectStatic(); ROOT.lang=LANG; applyStatic(); renderPrefs(); fillTplCats(); updateFmtUI();
 $('#docName').value=S.page.name;
-wire(); renderTemplates(); renderCommunity(); renderScaleSel(); refreshPreviewSelect(); updateBatchCount(); renderProps(); pushHist(); fit();
+wire(); renderTemplates(); renderScaleSel(); refreshPreviewSelect(); updateBatchCount(); renderProps(); pushHist(); fit();
 })();
 </script>
 

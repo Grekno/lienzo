@@ -18,7 +18,7 @@ Editor de diseño gráfico que funciona **entero en el navegador**, pensado para
 3. [Pestaña Diseñar](#pestaña-diseñar)
 4. [Pestaña Lote](#pestaña-lote)
 5. [Descargas y formatos](#descargas-y-formatos)
-6. [Plantillas propias y Comunidad](#plantillas-propias-y-comunidad)
+6. [Plantillas propias](#plantillas-propias)
 7. [Idioma y temas](#idioma-y-temas)
 8. [Atajos de teclado](#atajos-de-teclado)
 9. [Límites](#límites)
@@ -50,7 +50,6 @@ Notas:
 
 - Las tipografías van **incluidas en el repositorio** (`fonts/`): no se pide nada a servidores externos.
 - También funciona abriendo `index.html` con doble clic, aunque algunos navegadores limitan el almacenamiento local en archivos `file://`.
-- En una copia propia, la pestaña Comunidad no tendrá base de datos (ver [Plantillas propias y Comunidad](#plantillas-propias-y-comunidad)).
 
 ---
 
@@ -220,15 +219,12 @@ Al descargar varios zips seguidos, el navegador puede preguntar si permites **de
 
 ---
 
-## Plantillas propias y Comunidad
+## Plantillas propias
 
 - **Guardar plantilla** (barra superior) pide nombre y categoría (X, Instagram, YouTube, LinkedIn u Otros). Se guarda en tu navegador y aparece en **Plantillas → Mis plantillas** (filtro *Mías*). La × de cada tarjeta la elimina (con opción de deshacer).
 - Se guardan tamaño, fondo, textos y formas (con sus enlaces a columnas). **Las imágenes no se incluyen.**
-- La pestaña **Comunidad** muestra plantillas compartidas por otras personas, con filtro por categoría. Desde ahí puedes aplicarlas o **Guardar copia** en *Mis plantillas*; las que compartiste tú tienen *Quitar de la Comunidad*.
-
-> **Importante:** la Comunidad necesita una base de datos compartida, que solo existe cuando Lienzo se ejecuta como artefacto dentro de Claude. **En GitHub Pages la pestaña Comunidad no tiene backend**: muestra un aviso y la opción *Compartir en la Comunidad* aparece desactivada. El resto de la app, incluidas «Mis plantillas», funciona igual. Si quieres una Comunidad propia en GitHub Pages necesitas conectar un servicio externo (por ejemplo Firebase o Supabase); el código está preparado para sustituir fácilmente esa parte (`ensureComm`, `publishTpl` y `unshare` en `index.html`).
-
-Las plantillas recibidas de la Comunidad se **validan campo a campo** antes de usarse (tipos, colores, tamaños, textos recortados), de modo que una plantilla manipulada no puede inyectar código.
+- Las plantillas guardadas se **validan campo a campo** al cargarlas (tipos, colores, tamaños, textos recortados).
+- Son locales: no se comparten con nadie y solo existen en ese navegador. Para llevarlas a otro equipo no hay exportación por ahora.
 
 ---
 
@@ -364,4 +360,3 @@ Lienzo se distribuye bajo la licencia **MIT** (ver [LICENSE](LICENSE)): puedes u
 
 **Pegué 300 líneas y no se crearon todas.** Mira el aviso tras pegar: indica el número de filas pegadas y de caracteres. Si el origen (hoja de cálculo o web) recorta el portapapeles, el recorte ya viene de ahí. El límite de la app es de 500 filas.
 
-**La pestaña Comunidad dice que no está disponible.** Es lo esperado fuera de Claude (ver [Plantillas propias y Comunidad](#plantillas-propias-y-comunidad)).
